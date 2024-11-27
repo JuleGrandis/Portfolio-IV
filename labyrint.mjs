@@ -5,6 +5,7 @@ import * as CONST from "./constants.mjs";
 
 
 const startingLevel = CONST.START_LEVEL_ID;
+const secondLevel = CONST.A_SHARP_PLACE;
 const levels = loadLevelListings();
 
 function loadLevelListings(source = CONST.LEVEL_LISTING_FILE) {
@@ -41,13 +42,16 @@ let playerPos = {
 
 const EMPTY = " ";
 const HERO = "H";
-const LOOT = "$"
+const LOOT = "$";
+const DOOR = "D";
+const TELEPORT = "♨︎";
 
 let direction = -1;
 
 let items = [];
 
 const THINGS = [LOOT, EMPTY];
+const PLAYER_TRANSPORTATION =[DOOR, TELEPORT];
 
 let eventText = "";
 
@@ -62,6 +66,8 @@ class Labyrinth {
 
     update() {
 
+
+        function findHeroPos () {
         if (playerPos.row == null) {
             for (let row = 0; row < level.length; row++) {
                 for (let col = 0; col < level[row].length; col++) {
@@ -76,6 +82,9 @@ class Labyrinth {
                 }
             }
         }
+    }
+
+    findHeroPos();
 
         let drow = 0;
         let dcol = 0;
@@ -117,6 +126,36 @@ class Labyrinth {
         } else {
             direction *= -1;
         }
+
+        if (PLAYER_TRANSPORTATION.includes(level[tRow][tcol])) { // Is there anything where Hero is moving to
+
+            let currentItem = level[tRow][tcol];
+            if (currentItem == DOOR) {
+                levelData = readMapFile(levels[secondLevel]);
+                level = levelData;         
+            }
+
+            playerPos.row = null;
+            findHeroPos();
+
+            tRow = playerPos.row + (1 * drow);
+            tcol = playerPos.col + (1 * dcol);
+            
+
+            // Move the HERO
+            level[playerPos.row][playerPos.col] = EMPTY;
+            level[tRow][tcol] = HERO;
+
+            // Update the HERO
+            playerPos.row = tRow;
+            playerPos.col = tcol;
+
+            // Make the draw function draw.
+            isDirty = true;
+        } else {
+            direction *= -1;
+        }
+
     }
 
     draw() {
