@@ -13,6 +13,7 @@ function init() {
     //All levels available to the game. 
     state = new Labyrinth();
     intervalID = setInterval(update, REFRESH_RATE);
+
 }
 
 function update() {

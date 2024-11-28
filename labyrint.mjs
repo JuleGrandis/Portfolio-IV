@@ -2,6 +2,7 @@ import ANSI from "./utils/ANSI.mjs";
 import KeyBoardManager from "./utils/KeyBoardManager.mjs";
 import { readMapFile, readRecordFile } from "./utils/fileHelpers.mjs";
 import * as CONST from "./constants.mjs";
+import { isSetIterator } from "util/types";
 
 
 const startingLevel = CONST.START_LEVEL_ID;
@@ -32,7 +33,6 @@ let pallet = {
     "B": ANSI.COLOR.GREEN,
 }
 
-
 let isDirty = true;
 
 let playerPos = {
@@ -43,73 +43,70 @@ let playerPos = {
 const EMPTY = " ";
 const HERO = "H";
 const LOOT = "$";
-const DOOR = "D";
-const TELEPORT = "♨︎";
+const DOOR_1 = "1";
+const DOOR_2 = "2";
+const DOOR_3 = "3";
+const TELEPORT = "\u2668";
 
 let direction = -1;
 
 let items = [];
 
 const THINGS = [LOOT, EMPTY];
-const PLAYER_TRANSPORTATION =[DOOR, TELEPORT];
+const PLAYER_TRANSPORTATION =[DOOR_1, DOOR_2, DOOR_3, TELEPORT];
 
 let eventText = "";
+let prevDoorUsed = null;
 
 const HP_MAX = 10;
 
 const playerStats = {
     hp: 8,
-    chash: 0
+    cash: 0
 }
 
+let isGameStarted = true;
 class Labyrinth {
 
     update() {
 
-
-        function findHeroPos () {
-        if (playerPos.row == null) {
-            for (let row = 0; row < level.length; row++) {
-                for (let col = 0; col < level[row].length; col++) {
-                    if (level[row][col] == "H") {
-                        playerPos.row = row;
-                        playerPos.col = col;
-                        break;
-                    }
-                }
-                if (playerPos.row != undefined) {
-                    break;
-                }
+        if (isGameStarted) {
+            playerPos.row = 6;
+            playerPos.col = 4;
+            isGameStarted = false;
+        } else {
+            if (playerPos.row === null) {
+                playerPos.row = null;
+                playerPos.col = null;
             }
         }
-    }
 
-    findHeroPos();
+        findSymbol(HERO);
 
-        let drow = 0;
-        let dcol = 0;
+        let dRow = 0;
+        let dCol = 0;
 
         if (KeyBoardManager.isUpPressed()) {
-            drow = -1;
+            dRow = -1;
         } else if (KeyBoardManager.isDownPressed()) {
-            drow = 1;
+            dRow = 1;
         }
 
         if (KeyBoardManager.isLeftPressed()) {
-            dcol = -1;
+            dCol = -1;
         } else if (KeyBoardManager.isRightPressed()) {
-            dcol = 1;
+            dCol = 1;
         }
 
-        let tRow = playerPos.row + (1 * drow);
-        let tcol = playerPos.col + (1 * dcol);
+        let tRow = playerPos.row + (1 * dRow);
+        let tcol = playerPos.col + (1 * dCol);
 
         if (THINGS.includes(level[tRow][tcol])) { // Is there anything where Hero is moving to
 
             let currentItem = level[tRow][tcol];
             if (currentItem == LOOT) {
                 let loot = Math.round(Math.random() * 7) + 3;
-                playerStats.chash += loot;
+                playerStats.cash += loot;
                 eventText = `Player gained ${loot}$`;
             }
 
@@ -128,34 +125,47 @@ class Labyrinth {
         }
 
         if (PLAYER_TRANSPORTATION.includes(level[tRow][tcol])) { // Is there anything where Hero is moving to
-
             let currentItem = level[tRow][tcol];
-            if (currentItem == DOOR) {
+            prevDoorUsed = currentItem;
+
+            if (currentItem == DOOR_1) {
                 levelData = readMapFile(levels[secondLevel]);
-                level = levelData;         
+                level = levelData;
+                playerPos.col = 1;        
+            } else if (currentItem == DOOR_2) {
+                levelData = readMapFile(levels[startingLevel]);
+                level = levelData;
+                playerPos.col = 27;
+            } else if (currentItem == TELEPORT) {
+                level[playerPos.row][playerPos.col] = EMPTY;
+                level[tRow][tcol] = EMPTY;
+                playerPos.row = null;
+
+                if (playerPos.row == null) {
+                    for (let row = 0; row < level.length; row++) {
+                        for (let col = 0; col < level[row].length; col++) {
+                            if (level[row][col] == TELEPORT) {
+                                tRow = row;
+                                tcol = col;
+                                level[tRow][tcol] = HERO;
+                                playerPos.row = tRow;
+                                playerPos.col = tcol;
+                                isDirty = true;
+                                break;
+                            }
+                        }
+                        if (playerPos.row != undefined) {
+                            break;
+                        }
+                    }
+                }
             }
-
-            playerPos.row = null;
-            findHeroPos();
-
-            tRow = playerPos.row + (1 * drow);
-            tcol = playerPos.col + (1 * dcol);
-            
-
-            // Move the HERO
-            level[playerPos.row][playerPos.col] = EMPTY;
-            level[tRow][tcol] = HERO;
-
-            // Update the HERO
-            playerPos.row = tRow;
-            playerPos.col = tcol;
 
             // Make the draw function draw.
             isDirty = true;
         } else {
             direction *= -1;
         }
-
     }
 
     draw() {
@@ -195,7 +205,7 @@ class Labyrinth {
 
 function renderHud() {
     let hpBar = `Life:[${ANSI.COLOR.RED + pad(playerStats.hp, "♥︎") + ANSI.COLOR_RESET}${ANSI.COLOR.LIGHT_GRAY + pad(HP_MAX - playerStats.hp, "♥︎") + ANSI.COLOR_RESET}]`
-    let cash = `$:${playerStats.chash}`;
+    let cash = `$:${playerStats.cash}`;
     return `${hpBar} ${cash}\n`;
 }
 
@@ -207,5 +217,21 @@ function pad(len, text) {
     return output;
 }
 
-
+function findSymbol (symbol) {
+    if (playerPos.row == null) {
+        for (let row = 0; row < level.length; row++) {
+            for (let col = 0; col < level[row].length; col++) {
+                if (level[row][col] == symbol) {
+                    playerPos.row = row;
+                    playerPos.col = col;
+                    break;
+                }
+            }
+            if (playerPos.row != undefined) {
+                break;
+            }
+        }
+    }
+}
+               
 export default Labyrinth;
