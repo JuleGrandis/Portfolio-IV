@@ -1,4 +1,5 @@
 import { ANSI } from "./utils/ANSI.mjs";
+import oscillate from "./utils/oscilate.mjs";
 
 
 const OUTPUT_GRAPHICS = `
@@ -14,53 +15,35 @@ const OUTPUT_GRAPHICS = `
                        ░░ ░
 `;
 
-
-
 class SplashScreen {
-
     constructor() {
-        this.color = ANSI.COLOR.WHITE;
-        this.number = 0;
-        this.isAscending = false;
+        this.colorOscillator = oscillate(0, 255, 5);
         this.colRef = OUTPUT_GRAPHICS;
     }
 
-    updateColor() {
-        const step = 30;
-        const max = 300;
-        const min = 0;
+    update () {
+        const intensity = Math.round(this.colorOscillator());
+        const currentColor = `\u001b[38;2;${intensity};${intensity};${intensity}m`;
 
-        if (this.isAscending) {
-            this.number += step / 3;
-            if (this.number >= max) this.isAscending = false;
-        } else {
-            this.number -= step;
-            if(this.number <= min) this.isAscending = true;
-        }
+        const redGradient = (charIndex) => {
+            const intensity = 100 + (charIndex % 155);
+            return `\u001b[38;2;${intensity};0;0m`;
+        };
 
-        this.color = `\u001b[38;2;${this.number};${this.number};${this.number}m`;
-    }
 
-    generateBuffer() {
         this.colRef = Array.from(OUTPUT_GRAPHICS)
-            .map((char) =>
-                char === "█"
-                    ? `${this.color}█${ANSI.RESET}`
-                    : `\x1b[38;5;57m${char}${ANSI.RESET}`
-            )
+            .map((char, index) => {
+                if (char === "█") {
+                    return `${currentColor}█${ANSI.RESET}`;
+                }
+                return `${redGradient(index)}${char}${ANSI.RESET}`;
+            })
             .join("");
-    }
-
-    update() {
-        this.updateColor();
-        this.generateBuffer();
     }
 
     draw() {
         console.log(ANSI.CLEAR_SCREEN, this.colRef, ANSI.CURSOR_HOME);
     }
-
-
 }
 
 export default SplashScreen;
