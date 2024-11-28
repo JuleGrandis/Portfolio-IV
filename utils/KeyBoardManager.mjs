@@ -1,3 +1,4 @@
+import { read } from "node:fs";
 import * as readline from "node:readline"
 
 readline.emitKeypressEvents(process.stdin);
@@ -24,7 +25,12 @@ const KEY_ID =
     right: "right",
     return: "return",
     escape: "escape",
-    r: "r"
+    r: "r",
+
+    w: "w",
+    s: "s",
+    a: "a",
+    d: "d",
 }
 
 const KEY_STATES = Object.keys(KEY_ID).reduce((prev, cur) => {
@@ -47,16 +53,16 @@ const KeyBoardManager = {
 
     isDownPressed: () => {
 
-        return readKeyState(KEY_ID.down);
+        return readKeyState(KEY_ID.down) || readKeyState(KEY_ID.s);
     },
     isUpPressed: () => {
-        return readKeyState(KEY_ID.up);
+        return readKeyState(KEY_ID.up) || readKeyState(KEY_ID.w);
     },
     isLeftPressed: () => {
-        return readKeyState(KEY_ID.left);
+        return readKeyState(KEY_ID.left) || readKeyState(KEY_ID.a);
     },
     isRightPressed: () => {
-        return readKeyState(KEY_ID.right);
+        return readKeyState(KEY_ID.right) || readKeyState(KEY_ID.d);
     },
     isRotatePressed: () => {
         return readKeyState(KEY_ID.r);
