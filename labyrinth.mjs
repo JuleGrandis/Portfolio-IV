@@ -7,6 +7,7 @@ import { isSetIterator } from "util/types";
 
 const startingLevel = CONST.START_LEVEL_ID;
 const secondLevel = CONST.A_SHARP_PLACE;
+const thirdLevel = CONST.ROOM_3;
 const levels = loadLevelListings();
 
 function loadLevelListings(source = CONST.LEVEL_LISTING_FILE) {
@@ -135,7 +136,17 @@ class Labyrinth {
                 levelData = readMapFile(levels[startingLevel]);
                 level = levelData;
                 playerPos.col = 27;
-            } else if (currentItem == mapContent.TELEPORT) {
+            } else if (currentItem == mapContent.DOOR_3) {
+                levelData = readMapFile(levels[thirdLevel]);
+                level = levelData;
+                playerPos.row = 1;
+                playerPos.col = 17;
+            } else if (currentItem == mapContent.DOOR_4) {
+                levelData = readMapFile(levels[secondLevel]);
+                level = levelData;
+                playerPos.row = 14;
+                playerPos.col = 16;
+            } else if(currentItem == mapContent.TELEPORT) {
                 level[playerPos.row][playerPos.col] = mapContent.EMPTY;
                 level[tRow][tcol] = mapContent.EMPTY;
                 playerPos.row = null;
