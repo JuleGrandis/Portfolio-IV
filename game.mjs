@@ -1,4 +1,4 @@
-import Labyrinth from "./labyrint.mjs"
+import Labyrinth from "./labyrinth.mjs"
 import { ANSI } from "./utils/ANSI.mjs";
 import SplashScreen from "./splashScreen.mjs";
 

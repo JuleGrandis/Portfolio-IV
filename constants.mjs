@@ -5,7 +5,7 @@ const MAP_DIRECTORY = "./data/maps/";
 const DATA_DIR = "./data/";
 
 
-// Game spesific constants.
+// Game specific constants.
 const START_LEVEL_ID = "start";
 const A_SHARP_PLACE = "aSharpPlace";
 
