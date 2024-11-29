@@ -3,7 +3,7 @@ import KeyBoardManager from "./utils/KeyBoardManager.mjs";
 import LevelManager from "./gameLogic/levelHandler.mjs";
 import Player from "./gameLogic/playerLogic.mjs";
 import * as CONST from "./constants.mjs";
-import { isSetIterator } from "util/types";
+import NPCLogic from "./gameLogic/npcLogic.mjs";
 
 const levelManager = new LevelManager();
 const player = new Player();
@@ -21,6 +21,7 @@ class Labyrinth {
     constructor() {
         this.lastEventTime = 0;
         this.eventDuration = 2000;
+        this.npcLogic = new NPCLogic(level);
     }
 
     update() {
@@ -29,6 +30,7 @@ class Labyrinth {
             player.setPosition(6, 4);
         }
 
+        this.npcLogic.update();
         findSymbol(CONST.MAP_CONTENT.HERO);
 
         let dRow = 0;
@@ -42,7 +44,9 @@ class Labyrinth {
         let tRow = player.getPosition().row + dRow;
         let tcol = player.getPosition().col + dCol;
 
-        if (CONST.THINGS.includes(level[tRow][tcol])) { // Is there anything where Hero is moving to
+        let target = level[tRow][tcol]
+
+        if (CONST.THINGS.includes(target) || target === "X") { // Is there anything where Hero is moving to
             let currentItem = level[tRow][tcol];
 
             if (currentItem == CONST.MAP_CONTENT.LOOT) {
@@ -50,7 +54,16 @@ class Labyrinth {
                 player.gainLoot(loot);
                 eventText = `Player gained ${loot}$`;
                 this.lastEventTime = Date.now();
+                level[tRow][tcol] = CONST.MAP_CONTENT.EMPTY;
+            }
 
+            if (currentItem === "X") {
+                player.getStats().hp -= 2;
+                eventText = "Enemy strike you, you lost 2hp! \n You retaliate, and killed the enemy!";
+                this.lastEventTime = Date.now();
+
+                level[tRow][tcol] = CONST.MAP_CONTENT.EMPTY;
+                this.npcLogic.removeNPC(tRow, tcol);
             }
 
             // Move the HERO
@@ -72,15 +85,19 @@ class Labyrinth {
             if (currentItem == CONST.MAP_CONTENT.DOOR_1) {
                 level = levelManager.loadLevel(secondLevel);
                 player.setPosition(2, 1);      
+                this.npcLogic.updateLevel(level);
             } else if (currentItem == CONST.MAP_CONTENT.DOOR_2) {
                 level = levelManager.loadLevel(startingLevel);
                 player.setPosition(2, 27);
+                this.npcLogic.updateLevel(level);
             } else if (currentItem == CONST.MAP_CONTENT.DOOR_3) {
                 level = levelManager.loadLevel(thirdLevel);
                 player.setPosition(1, 17);
+                this.npcLogic.updateLevel(level);
             } else if (currentItem == CONST.MAP_CONTENT.DOOR_4) {
                 level = levelManager.loadLevel(secondLevel);
                 player.setPosition(14, 16);
+                this.npcLogic.updateLevel(level);
             } else if(currentItem == CONST.MAP_CONTENT.TELEPORT) {
                 level[player.getPosition().row][player.getPosition().col] = CONST.MAP_CONTENT.EMPTY;
                 level[tRow][tcol] = CONST.MAP_CONTENT.EMPTY;

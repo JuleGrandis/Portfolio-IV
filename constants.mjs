@@ -26,6 +26,7 @@ const PALLET = {
     "H": ANSI.COLOR.RED,
     "$": ANSI.COLOR.YELLOW,
     "B": ANSI.COLOR.GREEN,
+    "X": ANSI.COLOR.BLACK
 };
 
 const THINGS = [

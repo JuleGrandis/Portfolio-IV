@@ -1,4 +1,3 @@
-import * as CONST from "../constants.mjs";
 
 class Player {
     constructor() {
